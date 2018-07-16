@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">FireStoreTut</string>
+    <string name="number">Phone Number</string>
+    <string name="name">Name</string>
+    <string name="info">Job information</string>
+    <string name="submit">submit</string>
+    <string name="collection_name">Persons Database</string>
+    <string name="first_person">First Person</string>
+    <string name="load">load</string>
+    <string name="update_name">Update Name</string>
+    <string name="delete_person">Delete Person</string>
+    <string name="delete_name">Delete name</string>
+</resources>
