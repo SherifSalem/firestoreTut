@@ -29,37 +29,23 @@
         android:id="@+id/submit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/submit"
-        android:onClick="submitInformation"/>
+        android:text="@string/add_person"
+        android:onClick="submitRecord"/>
 
     <Button
         android:id="@+id/load"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/load"
-        android:onClick="loadPerson"/>
-    <Button
-        android:id="@+id/updateName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/update_name"
-        android:onClick="updateName"/>
-    <Button
-        android:id="@+id/deleteName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/delete_name"
-        android:onClick="deleteName"/>
-    <Button
-        android:id="@+id/deletePerson"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/delete_person"
-        android:onClick="deletePerson"/>
+        android:text="@string/load_persons"
+        android:onClick="loadPersons"/>
 
+<android.support.v4.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <TextView
         android:id="@+id/display"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="30sp"/>
+</android.support.v4.widget.NestedScrollView>
 </LinearLayout>

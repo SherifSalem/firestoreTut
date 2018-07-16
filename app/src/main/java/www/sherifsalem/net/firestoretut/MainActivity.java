@@ -3,7 +3,6 @@ package www.sherifsalem.net.firestoretut;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -11,12 +10,14 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import javax.annotation.Nullable;
 
@@ -36,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
 
     //initializing an instance of forestore data base
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    //add a collection reference to add multiple records
+    private CollectionReference records = db.collection("Persons Database");
 
     //creating a reference to certain document in the database
     private DocumentReference personRef = db.document("Persons Database/First Person");
@@ -57,41 +61,37 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        //this will load our records once we started the app , passing this to the listener will only make the call when we open
+        //our activity and clears and won't update it in the background so we save bandwidth
 
-
-        //snapshot listener to update the data when the activity starts
-        personRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        records.addSnapshotListener(this, new EventListener<QuerySnapshot>() {
             @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+           if (e != null){
+               return;
+           }else {
+               String dataRecords = "";
+               for (QueryDocumentSnapshot documentSnapshot: queryDocumentSnapshots){
 
-                //if there is an exception will show a toast then abort this method
-                if (e != null) {
-                    Toast.makeText(MainActivity.this, "Error loading data", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                //if the the document exists will fetch the data and display it in the display textview
-                if (documentSnapshot.exists()) {
-
-//                    String name = documentSnapshot.getString(KEY_NAME);
-//                    String number = documentSnapshot.getString(KEY_PHONE);
-//                    String info = documentSnapshot.getString(KEY_INFO);
-//                    displayTextView.setText("Name: " + name + "\n" + "Number: " + number + "\n" + "Info: " + info);
-
-                    Persons person = documentSnapshot.toObject(Persons.class);
-
-                    assert person != null;
-                    String name = person.getName();
-                    String number = person.getNumber();
-                    String info = person.getInfo();
+                   Persons persons = documentSnapshot.toObject(Persons.class);
+                  //gets the auto generated id for the document
+                   persons.setDocumentId(documentSnapshot.getId());
 
 
-                    displayTextView.setText("Name: " + name+ "\n" + "Number: "+ number + "\n" + "Info: " + info);
+                   String documentId = persons.getDocumentId();
+                   String name  = persons.getName();
+                   String number = persons.getNumber();
+                   String info = persons.getInfo();
 
-                } else {
-                    displayTextView.setText("");
-                }
+                   dataRecords +="ID: "+documentId+ "\nName: "+ name + "\nNumber: "+ number + "\nInfo: " + info + "\n\n";
+               }
+               displayTextView.setText(dataRecords);
+           }
+
             }
         });
+
+
     }
 
     /**
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param view
      */
-    public void submitInformation(View view) {
+    public void submitRecord(View view) {
         //get the text typed in the edit text fiels and convert it to string
         String name = nameEditText.getText().toString();
         String number = numberEditText.getText().toString();
@@ -107,30 +107,26 @@ public class MainActivity extends AppCompatActivity {
 
          person = new Persons(name, number, info);
 
-        //create a hashmap to save key value pairs of the data
-//        Map<String, Object> person = new HashMap<>();
-//        person.put(KEY_NAME, name);
-//        person.put(KEY_PHONE, number);
-//        person.put(KEY_INFO, info);
 
         //adding the key value pairs to the referenced document
-        personRef.set(person)
+        records.add(person).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                Toast.makeText(MainActivity.this, "record added successfully", Toast.LENGTH_SHORT).show();
+            }
 
-                //interface to show a toast when the data is saved successfully
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(MainActivity.this, "Person saved successfully :)", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                //interface to show a toast when fail to save data
+        })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MainActivity.this, "Faild to save person :(", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, e.toString());
+                        Toast.makeText(MainActivity.this, "there was an error adding record", Toast.LENGTH_SHORT).show();
                     }
                 });
+
+        nameEditText.clearComposingText();
+        numberEditText.clearComposingText();
+        infoEditText.clearComposingText();
+
     }
 
     /**
@@ -138,64 +134,32 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param view
      */
-    public void loadPerson(View view) {
+    public void loadPersons(View view) {
+        //gets the database records
+       records.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+           @Override
+           public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+            String datarecords = "";
 
-        personRef.get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        if (documentSnapshot.exists()) {
-                            //gets the document field from our database
-//                        String name = documentSnapshot.getString(KEY_NAME);
-//                        String number = documentSnapshot.getString(KEY_PHONE);
-//                        String info = documentSnapshot.getString(KEY_INFO);
+            for (QueryDocumentSnapshot documentSnapshots : queryDocumentSnapshots ){
+                Persons persons = documentSnapshots.toObject(Persons.class);
+                persons.setDocumentId(documentSnapshots.getId());
 
-                            //Map<String, Object> person = documentSnapshot.getData();
+                String documentId = persons.getDocumentId();
+                String name = persons.getName();
+                String number = persons.getNumber();
+                String info = persons.getName();
 
-                            Persons person = documentSnapshot.toObject(Persons.class);
-
-                            String name = person.getName();
-                            String number = person.getNumber();
-                            String info = person.getInfo();
+                datarecords += "ID: "+ documentId +"\nName: "+name + "\nNumber: "+ number +"\nInfo: "+ info +"\n\n";
 
 
-                            displayTextView.setText("Name: " + name + "\n" + "Number: " + number + "\n" + "Info: " + info);
-
-                        } else {
-                            Toast.makeText(MainActivity.this, "Person Does not exist ", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MainActivity.this, "Error getting data", Toast.LENGTH_SHORT).show();
-                    }
-                });
+            }
+               displayTextView.setText(datarecords);
+           }
+       });
     }
 
-    //update the name field
-    public void updateName(View view) {
 
-        String name = nameEditText.getText().toString();
-
-        //Map<String, Object> person = new HashMap<>();
-        //update just certain key of our data then adding it to the data
-        //person.put(KEY_NAME,name);
-        /*merge our updated data to our existing document
-        note that the merge method cretaes the doc if it is not exists while update doesn't
-         */
-        // personRef.set(person, SetOptions.merge());
-
-        //update using the update method for certain keys,
-        personRef.update(KEY_NAME, name);
-    }
-
-    //delete the whole document
-    public void deletePerson(View view) {
-        personRef.delete();
-    }
 
     //delete the name field
     public void deleteName(View view) {
