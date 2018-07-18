@@ -16,6 +16,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_PHONE = "number";
     private static final String KEY_INFO = "info";
     //reference var for the edit text fields
-    private EditText nameEditText, numberEditText, infoEditText;
+    private EditText nameEditText, numberEditText, infoEditText, priorityEditText;
     private TextView displayTextView;
      private Persons person;
 
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         nameEditText = findViewById(R.id.name_edit_text);
         numberEditText = findViewById(R.id.number);
         infoEditText = findViewById(R.id.info);
-
+        priorityEditText = findViewById(R.id.priority_edit_text);
         displayTextView = findViewById(R.id.display);
     }
 
@@ -82,8 +83,10 @@ public class MainActivity extends AppCompatActivity {
                    String name  = persons.getName();
                    String number = persons.getNumber();
                    String info = persons.getInfo();
+                    int priority = persons.getPriority();
 
-                   dataRecords +="ID: "+documentId+ "\nName: "+ name + "\nNumber: "+ number + "\nInfo: " + info + "\n\n";
+                   dataRecords += "ID: "+ documentId +"\nName: "+name + "\nNumber: "+ number +"\nInfo: "
+                           + info +"\nPriority: "+ priority+"\n\n";
                }
                displayTextView.setText(dataRecords);
            }
@@ -105,7 +108,20 @@ public class MainActivity extends AppCompatActivity {
         String number = numberEditText.getText().toString();
         String info = infoEditText.getText().toString();
 
-         person = new Persons(name, number, info);
+        //we are using this edit text as int so we must check that it is not 0 for we are parsing our edit text to int
+        //for the app not to crash
+        if (priorityEditText.length() == 0){
+            priorityEditText.setText("0");
+        }
+        int priority = Integer.parseInt(priorityEditText.getText().toString());
+        clearEditText();
+
+
+
+
+
+
+         person = new Persons(name, number, info, priority);
 
 
         //adding the key value pairs to the referenced document
@@ -136,7 +152,13 @@ public class MainActivity extends AppCompatActivity {
      */
     public void loadPersons(View view) {
         //gets the database records
-       records.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+       records
+               //filters the records
+               .whereEqualTo("priority",2)
+               .orderBy("priority", Query.Direction.DESCENDING)
+               //gets the records
+               .get()
+               .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
            @Override
            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
             String datarecords = "";
@@ -149,8 +171,10 @@ public class MainActivity extends AppCompatActivity {
                 String name = persons.getName();
                 String number = persons.getNumber();
                 String info = persons.getName();
+                int priority = persons.getPriority();
 
-                datarecords += "ID: "+ documentId +"\nName: "+name + "\nNumber: "+ number +"\nInfo: "+ info +"\n\n";
+                datarecords += "ID: "+ documentId +"\nName: "+name + "\nNumber: "+ number +"\nInfo: "
+                        + info +"\nPriority: "+ priority+"\n\n";
 
 
             }
@@ -165,5 +189,15 @@ public class MainActivity extends AppCompatActivity {
     public void deleteName(View view) {
 
         personRef.update(KEY_NAME, FieldValue.delete());
+    }
+
+    /*
+    method to clear edit texts after typing
+     */
+    private void clearEditText (){
+        priorityEditText.getText().clear();
+        nameEditText.getText().clear();
+        numberEditText.getText().clear();
+        infoEditText.getText().clear();
     }
 }

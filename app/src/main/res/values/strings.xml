@@ -12,4 +12,5 @@
     <string name="delete_name">Delete name</string>
     <string name="add_person">add person</string>
     <string name="load_persons" >load persons</string>
+    <string name="priority">Priority</string>
 </resources>

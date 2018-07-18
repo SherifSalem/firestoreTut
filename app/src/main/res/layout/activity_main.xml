@@ -25,6 +25,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/info"/>
+    <EditText
+        android:id="@+id/priority_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/priority"
+        android:inputType="number"/>
     <Button
         android:id="@+id/submit"
         android:layout_width="match_parent"
